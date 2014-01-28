@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+
+
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>LAMP Deployment &mdash; SaltStack for LAMP Deployment 2014.01.23 documentation</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/styles.css" type="text/css" />
+    <link rel="stylesheet" href="_static/single.css" type="text/css" />
+    
+
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="top" title="SaltStack for LAMP Deployment 2014.01.23 documentation" href="#" /> 
+  </head>
+  <body>
+
+<section
+   id="slide_container"
+   class='slides layout-regular'>
+
+
+  <article class="slide level-1" id="lamp-deployment">
+<h1>LAMP Deployment</h1>
+<div class="figure">
+<img alt="_images/saltconf.jpg" src="_images/saltconf.jpg" />
+</div>
+
+</article>
+<article class="slide level-2" id="introduction">
+<h2>Introduction</h2>
+<blockquote>
+<div><ul class="simple">
+<li>Christer Edwards (cedwards)</li>
+<li>Package Maintainer: FreeBSD, Arch Linux</li>
+<li><a class="reference external" href="http://intothesaltmine.org">http://intothesaltmine.org</a></li>
+<li>Local to SLC</li>
+</ul>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Try to make a bit of conversation here.</p>
+<p>Are there any FreeBSD users in here?
+Are there any Arch users in here?</p>
+<p class="last">How many people are from out of town? Where?</p>
+</div>
+
+</article>
+<article class="slide level-2" id="overview">
+<h2>Overview</h2>
+<p>This presentation is broken up into a few parts. There is a lecture /
+discussion portion and lab portions. We'll discuss a couple of different
+methods for deploying a LAMP stack using Salt, and then implement what we
+discussed.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>How many people are new-ish to SaltStack?</p>
+<p>How many people are new-ish to writing States?</p>
+<p class="last">How many people have used Formulas?</p>
+</div>
+
+</article>
+<article class="slide level-2" id="requirements">
+<h2>Requirements</h2>
+<p>This lab requires a running Salt minion and master. Preferrably a test system;
+perhaps a virtual machine.</p>
+<p>The demonstrations in this lab will be done on CentOS 6.5 and Salt 0.17.4.</p>
+
+</article>
+<article class="slide level-2" id="salt-states">
+<h2>Salt States</h2>
+<p>Using Salt States to define the packages and services we want to run.</p>
+
+</article>
+<article class="slide level-2" id="the-salt-state-tree">
+<h2>The Salt State tree:</h2>
+<div class="highlight-bash"><div class="highlight"><pre>/srv/salt/
+├── apache.sls
+├── mysql.sls
+├── php.sls
+└── top.sls
+</pre></div>
+</div>
+<p>OR</p>
+<div class="highlight-bash"><div class="highlight"><pre>/srv/salt/
+├── apache
+│   └── init.sls
+├── mysql
+│   └── init.sls
+├── php
+│   └── init.sls
+└── top.sls
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Briefly point out the differences in these two methods and the pros and
+cons. The latter is probably preferred if it will handle anything more than
+the single .sls file.</p>
+</div>
+
+</article>
+<article class="slide level-2" id="example-srv-salt-top-sls">
+<h2>Example: /srv/salt/top.sls</h2>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">base</span><span class="p-Indicator">:</span>
+  <span class="s">&#39;www*&#39;</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">apache</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">php</span>
+</pre></div>
+</div>
+<p>This 'top file' instructs Salt to apply the 'apache', 'mysql', and 'php' states
+to any machine matching the name 'www*'.</p>
+
+</article>
+<article class="slide level-2" id="example-apache-init-sls">
+<h2>Example: apache/init.sls</h2>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">apache</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">pkg</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">installed</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">httpd</span>
+  <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">running</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">httpd</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">enable</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">True</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">watch</span><span class="p-Indicator">:</span>
+      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">pkg</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">apache</span>
+</pre></div>
+</div>
+<p>This state file instructs Salt to install the apache package and to enable and
+start the service. Note the 'name' declaration to specify the proper package and
+service name.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">To spread out the time a little bit, type these up on the virtual machine
+as you go over them.</p>
+</div>
+
+</article>
+<article class="slide level-2" id="example-mysql-init-sls">
+<h2>Example: mysql/init.sls</h2>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">mysqld</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">pkg</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">installed</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mysql-server</span>
+  <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">running</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mysqld</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">enable</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">True</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">watch</span><span class="p-Indicator">:</span>
+      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">pkg</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mysqld</span>
+
+<span class="l-Scalar-Plain">mysql</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">pkg.installed</span>
+</pre></div>
+</div>
+<p>This state file instructs Salt to install the mysql server package and to
+enable and start the service. Again, notice the use of the name declaration to
+define the package and service name for this distribution.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">To spread out the time a little bit, type these up on the virtual machine
+as you go over them.</p>
+</div>
+
+</article>
+<article class="slide level-2" id="example-php-init-sls">
+<h2>Example: php/init.sls</h2>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">php</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">pkg.installed</span>
+
+<span class="l-Scalar-Plain">php-mysql</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">pkg.installed</span>
+</pre></div>
+</div>
+<p>This state file instructs Salt to install the php and php-mysql packages.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>To spread out the time a little bit, type these up on the virtual machine
+as you go over them.</p>
+<p class="last">Do a state.highstate test=True after this slide</p>
+</div>
+
+</article>
+<article class="slide level-2" id="content">
+<h2>Content</h2>
+<p>What about the site content? How do we configure that?</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Start a short discussion about different ways to push down the site content.
+This could be file.recurse, git.latest, in-house package installation, etc.</p>
+</div>
+
+</article>
+<article class="slide level-2" id="file-recurse">
+<h2>file.recurse:</h2>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">/srv/http/domain1.tld/html</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">file.recurse</span><span class="p-Indicator">:</span>
+    <span class="l-Scalar-Plain">source</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">salt://apache/html/</span>
+</pre></div>
+</div>
+<p>This example uses the <tt class="docutils literal"><span class="pre">file.recurse</span></tt> method to recursively copy all files in
+a directory into a destination folder on the minion.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In this example we're going to deploy a Wordpress site. We'll check out the
+source via svn and then file.recurse the contents into place.</p>
+</div>
+
+</article>
+<article class="slide level-2" id="git-latest">
+<h2>git.latest:</h2>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">https://github.com/username/repo.git</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">git.latest</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">target</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/srv/http/domain1.tld/html</span>
+</pre></div>
+</div>
+<p>This example uses the <tt class="docutils literal"><span class="pre">git.latest</span></tt> method to checkout a git repository of the
+site contents into a destination folder. This also supports branch, tag, or
+revision ID.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In this example we're going to deploy the full site contents using git.
+We'll check out the latest version of the repository and place it where it
+needs to be.</p>
+</div>
+
+</article>
+<article class="slide level-1" id="demo">
+<h1>Demo</h1>
+
+</article>
+<article class="slide level-1" id="practice-states">
+<h1>Practice : States</h1>
+<p>Practice writing states by creating an <tt class="docutils literal"><span class="pre">apache</span></tt>, <tt class="docutils literal"><span class="pre">mysql</span></tt> and <tt class="docutils literal"><span class="pre">php</span></tt> sls
+files. Apply these to your web server in the <tt class="docutils literal"><span class="pre">top.sls</span></tt>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Give the students some time to type of some states from scratch. After some
+time mention how some students are on RHEL while others are on Debian. Mention
+compatibility of package names and services. The solution is Formulas.</p>
+</div>
+
+</article>
+<article class="slide level-1" id="formulas">
+<h1>Formulas</h1>
+<p>SaltStack Formulas allow you to use pre-built, cross-distro advanced states
+instead of writing your own. Formulas are available from:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference external" href="https://github.com/saltstack-formulas/">https://github.com/saltstack-formulas/</a></li>
+</ul>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Take a look at some of the many formulas available on github. Don't go into
+much detail, but have a look at the list.</p>
+</div>
+
+</article>
+<article class="slide level-2" id="gitfs">
+<h2>gitfs</h2>
+<p><tt class="docutils literal"><span class="pre">gitfs</span></tt> allows you to use git repositories directly for your <tt class="docutils literal"><span class="pre">file_roots</span></tt>. A
+simple way to use SaltStack Formulas is through gitfs.</p>
+<p><tt class="docutils literal"><span class="pre">gitfs</span></tt> also requires the <tt class="docutils literal"><span class="pre">GitPython</span></tt> or <tt class="docutils literal"><span class="pre">python-git</span></tt> package.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Make sure the students understand that using gitfs is completely optional.
+The alternative would be to checkout the repositories into the local
+file_roots.</p>
+</div>
+
+</article>
+<article class="slide level-2" id="etc-salt-master">
+<h2>/etc/salt/master</h2>
+<p>First, declare gitfs as a <tt class="docutils literal"><span class="pre">fileserver_backend</span></tt> in the master config. Note:
+order here is important (bug?).</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">fileserver_backend</span><span class="p-Indicator">:</span>
+  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">roots</span>
+  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">git</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Mention that the example in the sample config file has them in reverse
+order. This is likely a bug, but until such time that it's fixed, the order on
+the slide is important.</p>
+</div>
+
+</article>
+<article class="slide level-2" id="etc-salt-master-cont">
+<h2>/etc/salt/master (cont.)</h2>
+<p>Next, list the git repositories you want to use.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">gitfs_remotes</span><span class="p-Indicator">:</span>
+  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">git://github.com/saltstack-formulas/apache-formula.git</span>
+  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">git://github.com/saltstack-formulas/mysql-formula.git</span>
+  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">git://github.com/saltstack-formulas/php-formula.git</span>
+</pre></div>
+</div>
+
+</article>
+<article class="slide level-2" id="the-apache-formula">
+<h2>The Apache Formula</h2>
+<p>The Apache Formula currently supports the following:</p>
+<blockquote>
+<div><ul class="simple">
+<li>apache</li>
+<li>apache.mod_proxy</li>
+<li>apache.mod_proxy_http</li>
+<li>apache.mod_wsgi</li>
+<li>apache.vhosts.standard</li>
+<li>apache.debian_full</li>
+</ul>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Take some time to look at each of the sls. Explain how <tt class="docutils literal"><span class="pre">apache.mod_proxy</span></tt>
+translates into the .sls files.</p>
+</div>
+
+</article>
+<article class="slide level-2" id="apache-vhosts-standard">
+<h2>apache.vhosts.standard</h2>
+<p>Let's take a minute to look at the <tt class="docutils literal"><span class="pre">apache.vhosts.standard</span></tt> part of the
+Formula.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Open the github page and look at how the <tt class="docutils literal"><span class="pre">apache.vhosts.standard</span></tt> part of
+the formula works. Explain what it will generate, and the pillar data that can
+be used to customize it.</p>
+</div>
+
+</article>
+<article class="slide level-2" id="the-mysql-formula">
+<h2>The MySQL Formula</h2>
+<p>The MySQL Formula currently supports two states:</p>
+<blockquote>
+<div><ul class="simple">
+<li>mysql.client</li>
+<li>mysql.server</li>
+</ul>
+</div></blockquote>
+
+</article>
+<article class="slide level-2" id="the-php-formula">
+<h2>The PHP Formula</h2>
+<p>The PHP Formula currently supports the following:</p>
+<blockquote>
+<div><ul class="simple">
+<li>php</li>
+<li>php.apc</li>
+<li>php.curl</li>
+<li>php.fpm</li>
+<li>php.gd</li>
+<li>php.mcrypt</li>
+<li>php.mysql</li>
+<li>php.pear</li>
+</ul>
+</div></blockquote>
+
+</article>
+<article class="slide level-2" id="id1">
+<h2>Example /srv/salt/top.sls</h2>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">base</span><span class="p-Indicator">:</span>
+  <span class="s">&#39;www*&#39;</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">apache</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">apache.vhosts.standard</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql.server</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">php</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">php.mysql</span>
+</pre></div>
+</div>
+
+</article>
+<article class="slide level-2" id="example-srv-pillar-top-sls">
+<h2>Example /srv/pillar/top.sls</h2>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">base</span><span class="p-Indicator">:</span>
+  <span class="s">&#39;www*&#39;</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">vhosts</span>
+</pre></div>
+</div>
+
+</article>
+<article class="slide level-2" id="example-srv-pillar-vhosts-sls">
+<h2>Example /srv/pillar/vhosts.sls</h2>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">apache</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">sites</span><span class="p-Indicator">:</span>
+    <span class="l-Scalar-Plain">domain1.tld</span><span class="p-Indicator">:</span>
+      <span class="l-Scalar-Plain">template_file</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">salt://apache/vhosts/standard.tmpl</span>
+      <span class="l-Scalar-Plain">template_engine</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">jinja</span>
+    <span class="l-Scalar-Plain">domain2.tld</span><span class="p-Indicator">:</span>
+      <span class="l-Scalar-Plain">template_file</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">salt://apache/vhosts/standard.tmpl</span>
+      <span class="l-Scalar-Plain">template_engine</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">jinja</span>
+    <span class="l-Scalar-Plain">domain3.tld</span><span class="p-Indicator">:</span>
+      <span class="l-Scalar-Plain">template_file</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">salt://apache/vhosts/standard.tmpl</span>
+      <span class="l-Scalar-Plain">template_engine</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">jinja</span>
+    <span class="l-Scalar-Plain">domain4.tld</span><span class="p-Indicator">:</span>
+      <span class="l-Scalar-Plain">template_file</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">salt://apache/vhosts/standard.tmpl</span>
+      <span class="l-Scalar-Plain">template_engine</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">jinja</span>
+    <span class="l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+
+</article>
+<article class="slide level-1" id="id2">
+<h1>Demo</h1>
+
+</article>
+<article class="slide level-1" id="practice-formulas">
+<h1>Practice : Formulas</h1>
+<p>Practice using SaltStack Formulas via gitfs by setting the <tt class="docutils literal"><span class="pre">apache</span></tt>,
+<tt class="docutils literal"><span class="pre">mysql</span></tt> and <tt class="docutils literal"><span class="pre">php</span></tt> formulas as <tt class="docutils literal"><span class="pre">gitfs_remotes</span></tt>. Apply theseto your web
+server in the <tt class="docutils literal"><span class="pre">top.sls</span></tt>.</p>
+
+</article>
+<article class="slide level-1" id="christer-edwards">
+<h1>Christer Edwards</h1>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference external" href="http://intothesaltmine.org">http://intothesaltmine.org</a></li>
+<li>#salt (cedwards)</li>
+<li><a class="reference external" href="mailto:cedwards&#37;&#52;&#48;xmission&#46;com">cedwards<span>&#64;</span>xmission<span>&#46;</span>com</a></li>
+</ul>
+</div></blockquote>
+
+</article>
+
+
+</section>
+
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2014.01.23',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/common.js"></script>
+    <script type="text/javascript" src="_static/slides.js"></script>
+    <script type="text/javascript" src="_static/sync.js"></script>
+    <script type="text/javascript" src="_static/controller.js"></script>
+    <script type="text/javascript" src="_static/init.js"></script>
+    
+  </body>
+</html>
