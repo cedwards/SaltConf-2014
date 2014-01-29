@@ -95,6 +95,11 @@ Example: /srv/salt/top.sls
 This 'top file' instructs Salt to apply the 'apache', 'mysql', and 'php' states
 to any machine matching the name 'www*'.
 
+.. note::
+
+    Ask if everyone understands how the top.sls works, and the targetting
+    options available.
+
 Example: apache/init.sls
 ------------------------
 
