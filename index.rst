@@ -214,6 +214,20 @@ revision ID.
     We'll check out the latest version of the repository and place it where it
     needs to be.
 
+pkg.installed:
+--------------
+
+.. code-block:: yaml
+
+    web_content:
+      pkg:
+        - installed
+        - name: custom_package
+
+This example uses the ``pkg.installed`` method to install web contents. This
+requires internal package(s) be built and made available to your package
+manager.
+
 ====
 Demo
 ====
