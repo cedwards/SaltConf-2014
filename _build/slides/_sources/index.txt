@@ -200,9 +200,9 @@ git.latest:
 
 .. code-block:: yaml
 
-    https://github.com/username/repo.git:
+    https://github.com/cedwards/SaltConf-2014
       git.latest:
-        - target: /srv/http/domain1.tld/html
+        - target: /srv/http/domain2.tld/html
 
 This example uses the ``git.latest`` method to checkout a git repository of the
 site contents into a destination folder. This also supports branch, tag, or
@@ -399,6 +399,6 @@ server in the ``top.sls``.
 Christer Edwards
 ================
 
- - http://intothesaltmine.org
  - #salt (cedwards)
  - cedwards@xmission.com
+ - http://intothesaltmine.org/presents/SaltConf-2014/
